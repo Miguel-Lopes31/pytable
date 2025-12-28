@@ -10,6 +10,7 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_admin = db.Column(db.Boolean, default=False)
     banned_until = db.Column(db.DateTime, nullable=True)
+    zombie_badge = db.Column(db.Boolean, default=False)
     
     # Relationships
     sessions = db.relationship('GameSession', backref='user', lazy=True)

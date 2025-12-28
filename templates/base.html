@@ -14,15 +14,14 @@
         <div class="logo">PYTABLE</div>
         <div class="nav-links">
             {% if session.get('user_id') %}
-            {% if session.get('user_id') and current_user_is_admin %}
-            <!-- We need to pass this context or check in jinja? session doesn't store is_admin typically unless we add it. I'll rely on a context processor or just check if the user is admin in the route, OR just add is_admin to session for simplicity in this prototype. -->
-            <a href="{{ url_for('admin_dashboard') }}" style="color: gold;">Admin</a>
-            {% endif %}
             <a href="{{ url_for('menu') }}" class="{{ 'active' if request.endpoint == 'menu' else '' }}">Praticar</a>
             <a href="{{ url_for('dashboard') }}"
                 class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">Dashboard</a>
             <a href="{{ url_for('ranking') }}"
                 class="{{ 'active' if request.endpoint == 'ranking' else '' }}">Ranking</a>
+            {% if current_user_is_admin %}
+            <a href="{{ url_for('admin_dashboard') }}" style="color: gold;">Admin</a>
+            {% endif %}
             <a href="{{ url_for('logout') }}" style="color: var(--danger)">Sair</a>
             {% else %}
             <a href="{{ url_for('login') }}">Entrar</a>

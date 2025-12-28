@@ -12,11 +12,13 @@
             <tr>
                 <th>Posição</th>
                 <th>Usuário</th>
+                <th>Nível</th>
+                <th>Título</th>
                 <th>Pontuação Total</th>
             </tr>
         </thead>
         <tbody>
-            {% for user, score in leaders %}
+            {% for item in leaders %}
             <tr>
                 <td>
                     {% if loop.index == 1 %}<span class="rank-1">1º 🥇</span>
@@ -25,19 +27,30 @@
                     {% else %}{{ loop.index }}º{% endif %}
                 </td>
                 <td>
-                    {{ user.username }}
-                    {% if user.is_admin %}
+                    {{ item.username }}
+                    {% if item.is_admin %}
                     <span title="Administrador" style="margin-left: 5px; cursor: help;">👑</span>
                     {% endif %}
+                    {% if item.zombie_badge %}
+                    <span title="Sobrevivente Zumbi" style="margin-left: 5px; cursor: help;">🧟</span>
+                    {% endif %}
+                    {% if item.badge %}
+                    <span title="Nível {{ item.level }}" style="margin-left: 5px; cursor: help;">{{ item.badge }}</span>
+                    {% endif %}
                 </td>
-                <td>{{ score }}</td>
+                <td><span style="background: #333; padding: 2px 8px; border-radius: 4px; font-size: 0.9rem;">Lvl {{
+                        item.level }}</span></td>
+                <td style="color: #aaa; font-style: italic;">{{ item.title }}</td>
+                <td style="font-weight: bold; color: var(--success);">{{ item.total_score }}</td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="3" style="text-align: center; color: #666;">Nenhum dado ainda.</td>
+                <td colspan="5" style="text-align: center; color: #666;">Nenhum dado ainda.</td>
             </tr>
             {% endfor %}
         </tbody>
+    </table>
+    </tbody>
     </table>
 </div>
 {% endblock %}

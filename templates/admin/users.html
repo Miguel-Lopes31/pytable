@@ -49,9 +49,27 @@
                         <!-- Score Button -->
                         <button onclick="openModal('score-{{ u.id }}')" class="btn"
                             style="width: auto; padding: 5px 10px; font-size: 0.8rem; background: var(--success);">Pontos</button>
+
+                        <!-- Delete Button -->
+                        <button onclick="openModal('delete-{{ u.id }}')" class="btn"
+                            style="width: auto; padding: 5px 10px; font-size: 0.8rem; background: #888;">Excluir</button>
                     </div>
 
                     <!-- Modals -->
+                    <!-- Delete Modal -->
+                    <dialog id="delete-{{ u.id }}"
+                        style="padding: 20px; border-radius: 8px; border: 1px solid #ff4444; background: #1a1a1a; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed; max-width: 400px;">
+                        <h3 style="color: var(--danger);">Excluir {{ u.username }}?</h3>
+                        <p>TEM CERTEZA? Esta ação apagará PERMANENTEMENTE o usuário e todo o histórico de jogos.</p>
+                        <form action="{{ url_for('admin_delete_user', user_id=u.id) }}" method="POST">
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button type="submit" class="btn" style="background: var(--danger)">Excluir
+                                    Definitivamente</button>
+                                <button type="button" class="btn" style="background: #444;"
+                                    onclick="closeModal('delete-{{ u.id }}')">Cancelar</button>
+                            </div>
+                        </form>
+                    </dialog>
                     <!-- Edit Modal -->
                     <dialog id="edit-{{ u.id }}"
                         style="padding: 20px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed;">
@@ -64,6 +82,17 @@
                             <div class="form-group">
                                 <label>Nova Senha</label>
                                 <input type="password" name="password" placeholder="Nova senha">
+                            </div>
+                            <div class="form-group"
+                                style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                                <input type="checkbox" name="is_admin" id="admin-check-{{ u.id }}" {% if u.is_admin
+                                    %}checked{% endif %}>
+                                <label for="admin-check-{{ u.id }}">Admin 👑</label>
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" name="zombie_badge" id="zombie-check-{{ u.id }}" {% if
+                                    u.zombie_badge %}checked{% endif %}>
+                                <label for="zombie-check-{{ u.id }}">Zombie Badge 🧟</label>
                             </div>
                             <div style="display: flex; gap: 10px;">
                                 <button type="submit" class="btn">Salvar</button>
@@ -83,7 +112,8 @@
                                 <input type="number" name="hours" value="24">
                             </div>
                             <div style="display: flex; gap: 10px;">
-                                <button type="submit" class="btn" style="background: var(--danger)">Confirmar Ban</button>
+                                <button type="submit" class="btn" style="background: var(--danger)">Confirmar
+                                    Ban</button>
                                 <button type="button" class="btn" style="background: #444;"
                                     onclick="closeModal('ban-{{ u.id }}')">Cancelar</button>
                             </div>
@@ -98,7 +128,8 @@
                         <form action="{{ url_for('admin_ban_user', user_id=u.id) }}" method="POST">
                             <input type="hidden" name="hours" value="0">
                             <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                <button type="submit" class="btn" style="background: var(--success)">Confirmar Desban</button>
+                                <button type="submit" class="btn" style="background: var(--success)">Confirmar
+                                    Desban</button>
                                 <button type="button" class="btn" style="background: #444;"
                                     onclick="closeModal('unban-{{ u.id }}')">Cancelar</button>
                             </div>
@@ -122,11 +153,20 @@
                                     <option value="remove">Remover</option>
                                 </select>
                             </div>
-                            <div style="display: flex; gap: 10px;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
                                 <button type="submit" class="btn" style="background: var(--success)">Confirmar</button>
                                 <button type="button" class="btn" style="background: #444;"
                                     onclick="closeModal('score-{{ u.id }}')">Cancelar</button>
                             </div>
+                        </form>
+
+                        <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
+
+                        <form action="{{ url_for('admin_manage_score', user_id=u.id) }}" method="POST"
+                            onsubmit="return confirm('⚠️ ATENÇÃO: Tem certeza que deseja ZERAR os pontos deste usuário? Esta ação é irreversível.');">
+                            <input type="hidden" name="action" value="clear">
+                            <button type="submit" class="btn" style="background: var(--danger); width: 100%;">ZERAR
+                                PONTOS (Clear) 🗑️</button>
                         </form>
                     </dialog>
                 </td>

@@ -1,8 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Bem-vindo, {{ username }}</h1>
+<div class="page-header" style="margin-bottom: 30px;">
+    <h1>Bem-vindo, {{ username }} {% if user.zombie_badge %} 🧟 {% endif %}</h1>
+
+    <!-- Minimal Level Display -->
+    <div
+        style="background: transparent; border: 1px solid #333; border-radius: 8px; padding: 10px 20px; max-width: 450px; margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 1.8rem;">{{ level_data.badge }}</div>
+            <div style="text-align: left;">
+                <div style="font-weight: bold; color: var(--primary-blue); font-size: 1.1rem;">Nível {{ level_data.level
+                    }}</div>
+                <div style="color: #666; font-size: 0.9rem;">{{ level_data.title }}</div>
+            </div>
+        </div>
+        <div style="text-align: right; font-size: 0.8rem; color: #555;">
+            Próximo: {{ level_data.next_level_score }} XP
+        </div>
+    </div>
+
     <p style="color: var(--text-muted)">Escolha as tabuadas que deseja praticar hoje.</p>
 </div>
 
@@ -36,6 +53,12 @@
 
 <div class="action-bar">
     <button class="btn btn-large" onclick="startGame()">Começar Prática</button>
+    <button class="btn btn-large" style="background-color: #50aa50; margin-left: 10px;" onclick="startZombieMode()">Modo
+        Zumbi 🧟</button>
+    <button class="btn btn-large" style="background-color: #ffaa00; margin-left: 10px;"
+        onclick="startTimeAttackMode()">Relógio ⏱️</button>
+    <button class="btn btn-large" style="background-color: #9b59b6; margin-left: 10px;"
+        onclick="startSmartMode()">Treino 🧠</button>
 </div>
 
 <script>
@@ -74,6 +97,23 @@
         const time = document.getElementById('time-select').value;
         const url = "{{ url_for('game') }}?tables=" + tables + "&time=" + time;
         window.location.href = url;
+    }
+
+    function startZombieMode() {
+        if (confirm("Modo Zumbi: Todas as tabuadas, 5 segundos, errou perdeu. Aceita o desafio?")) {
+            window.location.href = "{{ url_for('game') }}?mode=zombie";
+        }
+    }
+
+    function startTimeAttackMode() {
+        if (confirm("Modo Contra o Relógio: 60 segundos para acertar o máximo possível! Preparado?")) {
+            window.location.href = "{{ url_for('game') }}?mode=time_attack";
+        }
+    }
+
+    function startSmartMode() {
+        // Direct entry, maybe a tooltip or small alert?
+        window.location.href = "{{ url_for('game') }}?mode=smart";
     }
 </script>
 {% endblock %}

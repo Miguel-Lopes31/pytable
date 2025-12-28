@@ -1,7 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     const dataEl = document.getElementById('game-data');
     const tableConfig = dataEl.dataset.tables;
-    const timeLimit = parseInt(dataEl.dataset.time) || 5;
+    const timeLimitStr = dataEl.dataset.time;
+    const mode = dataEl.dataset.mode || 'normal';
+
+    // Zombie Mode overrides
+    let timeLimit = parseInt(timeLimitStr) || 5;
+    if (mode === 'zombie') {
+        timeLimit = 5;
+    }
 
     const questionEl = document.getElementById('question');
     const optionsContainer = document.getElementById('options-container');
@@ -24,7 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tables selected: e.g. "2,3" -> Deck: 2x1...2x10, 3x1...3x10
     function initDeck() {
         let tables = [];
-        if (tableConfig.toLowerCase() === 'all') {
+
+        if (mode === 'zombie' || mode === 'time_attack') {
+            tables = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        } else if (tableConfig.toLowerCase() === 'all') {
             tables = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         } else {
             tables = tableConfig.split(',').map(Number);
@@ -44,8 +54,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Start Game
-    initDeck();
-    startStartCountdown();
+    // Start Game - Refactored for Async
+    if (mode === 'smart') {
+        const scoreDisplay = document.getElementById('score-display');
+        scoreDisplay.innerHTML = '🧠 Carregando seus erros...';
+
+        // Fetch smart deck
+        fetch('/api/smart_deck')
+            .then(r => r.json())
+            .then(data => {
+                deck = data;
+                scoreDisplay.innerHTML = '🧠 Treino Inteligente';
+                scoreDisplay.style.color = '#9b59b6';
+                startStartCountdown();
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Erro ao carregar treino inteligente. Voltando ao modo normal.");
+                // Fallback
+                mode = 'normal';
+                initDeck();
+                startStartCountdown();
+            });
+
+    } else {
+        initDeck();
+        if (mode === 'zombie') {
+            scoreEl.innerHTML = '🧟 ZOMBIE MODE <br> Survive!';
+            scoreEl.style.color = '#50aa50';
+        }
+        startStartCountdown();
+    }
 
     function startStartCountdown() {
         let count = 5;
@@ -71,7 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (gameState.timerInterval) clearInterval(gameState.timerInterval);
 
         if (deck.length === 0) {
-            endGame();
+            // If smart mode, maybe loop again? Or just end? Let's end for now as it's a "set" of training.
+            endGame(true);
             return;
         }
 
@@ -166,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isCorrect) {
             gameState.score++;
             if (btnElement) btnElement.classList.add('correct-anim');
-            scoreEl.textContent = `Pontos: ${gameState.score}`;
+            scoreEl.textContent = mode === 'zombie' ? `🧟 Score: ${gameState.score}` : `Pontos: ${gameState.score}`;
             setTimeout(nextQuestion, 500);
         } else {
             if (btnElement) {
@@ -175,19 +215,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Timeout or other error
                 questionEl.classList.add('shake');
             }
-            // Show correct answer simply? Or just move on.
-            // Requirement: "Se errar ira passar para a proxima" -> move on.
-            setTimeout(nextQuestion, 600);
+
+            // Zombie Mode: Instant Death
+            if (mode === 'zombie') {
+                setTimeout(endGame, 1000);
+            } else {
+                setTimeout(nextQuestion, 600);
+            }
         }
     }
 
     function endGame() {
         gameState.active = false;
         overlay.style.display = 'flex';
+
+        let title = 'Fim de Jogo!';
+        let message = `Pontuação: ${gameState.score} / ${gameState.totalQuestions}`;
+
+        if (mode === 'zombie') {
+            if (gameState.score === 100) { // 10x10 tables = 100 questions
+                title = '🧟 VICTORY! 🧟';
+                message = '<p style="color: #50aa50; font-size: 1.2rem; font-weight: bold;">VOCÊ SOBREVIVEU AO APOCALIPSE!</p><p>Você ganhou o emblema Zumbi!</p>';
+            } else {
+                title = '🧟 GAME OVER 🧟';
+                message = `<p style="color: var(--danger);">Os zumbis te pegaram!</p><p>Você sobreviveu por ${gameState.score} rodadas.</p>`;
+            }
+        }
+
         overlay.innerHTML = `
             <div class="auth-box">
-                <h2>Fim de Jogo!</h2>
-                <p>Pontuação: ${gameState.score} / ${gameState.totalQuestions}</p>
+                <h2>${title}</h2>
+                <div>${message}</div>
                 <div style="margin-top: 20px;">
                     <button class="btn" onclick="saveAndExit()">Finalizar</button>
                     <button class="btn" style="background: #333; margin-top: 10px;" onclick="window.location.reload()">Jogar Novamente</button>
@@ -203,7 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                tables: tableConfig,
+                tables: tableConfig, // Will serve as record, even if mode overridden
+                mode: mode, // SEND MODE TO SERVER
                 score: gameState.score,
                 total_questions: gameState.totalQuestions,
                 details: gameState.details
