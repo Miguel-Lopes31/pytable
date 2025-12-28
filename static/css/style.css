@@ -1,0 +1,335 @@
+/* Global Styles */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+:root {
+    --bg-color: #0d0d0d;
+    --card-bg: #1a1a1a;
+    --primary-blue: #2962ff;
+    --primary-hover: #0039cb;
+    --accent-cyan: #00b0ff;
+    --text-main: #ffffff;
+    --text-muted: #b0bec5;
+    --danger: #ff1744;
+    --success: #00e676;
+    --border-radius: 12px;
+}
+
+* {
+    box-sizing: border_box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 5%;
+    background: transparent; /* Minimalist */
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    letter-spacing: 1px;
+}
+
+.nav-links a {
+    margin-left: 20px;
+    font-weight: 400;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    transition: color 0.3s;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    color: var(--text-main);
+}
+
+/* Auth Pages */
+.auth-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.auth-box {
+    background: var(--card-bg);
+    padding: 40px;
+    border-radius: var(--border-radius);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center;
+}
+
+.auth-box h2 {
+    margin-bottom: 20px;
+    color: var(--primary-blue);
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background: #0f0f0f;
+    color: white;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: var(--primary-blue);
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary-blue);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+.auth-switch {
+    margin-top: 15px;
+    font-size: 0.85rem;
+}
+
+.auth-switch a {
+    color: var(--accent-cyan);
+}
+
+/* Menu / Dashboard */
+.container {
+    padding: 20px 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.table-card {
+    background: var(--card-bg);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    user-select: none;
+}
+
+.table-card:hover {
+    background: #252525;
+}
+
+.table-card.selected {
+    border-color: var(--primary-blue);
+    background: rgba(41, 98, 255, 0.1);
+}
+
+.table-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.action-bar {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.btn-large {
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    width: auto;
+}
+
+/* Game Interface */
+.game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 70vh;
+    text-align: center;
+    position: relative;
+}
+
+.question-box {
+    font-size: 5rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.question-box.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 500px;
+}
+
+.option-btn {
+    background: var(--card-bg);
+    padding: 20px;
+    font-size: 1.5rem;
+    border-radius: var(--border-radius);
+    border: 2px solid transparent; /* default border */
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.option-btn:hover {
+    background: #252525;
+    border-color: #444; /* Added subtle hover border effect */
+}
+
+/* Countdown Overlay */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+.countdown-number {
+    font-size: 8rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Animations Logic classes */
+.shake {
+    animation: shake 0.5s;
+    border-color: var(--danger) !important;
+    color: var(--danger);
+}
+
+.correct-anim {
+    border-color: var(--success) !important;
+    background: rgba(0, 230, 118, 0.1);
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    50% { transform: translateX(10px); }
+    75% { transform: translateX(-10px); }
+    100% { transform: translateX(0); }
+}
+
+/* Dashboard */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.chart-card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: var(--border-radius);
+}
+
+/* Ranking Table */
+.ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.ranking-table th, .ranking-table td {
+    padding: 15px 20px;
+    text-align: left;
+    border-bottom: 1px solid #333;
+}
+
+.ranking-table th {
+    background: #252525;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.ranking-table tr:last-child td {
+    border-bottom: none;
+}
+
+.rank-1 { color: #ffd700; font-weight: bold; }
+.rank-2 { color: #c0c0c0; font-weight: bold; }
+.rank-3 { color: #cd7f32; font-weight: bold; }

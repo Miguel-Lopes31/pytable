@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Painel de Administrador</h1>
+    <p style="color: var(--text-muted)">Gerenciar Usuários</p>
+</div>
+
+<div class="table-card" style="text-align: left; cursor: default; overflow-x: auto;">
+    <table class="ranking-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuário</th>
+                <th>Banido até</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.id }}</td>
+                <td>
+                    {{ u.username }}
+                    {% if u.is_admin %}<span style="color: gold;">★</span>{% endif %}
+                </td>
+                <td>
+                    {% if u.banned_until %}
+                    <span style="color: var(--danger)">{{ u.banned_until.strftime('%d/%m %H:%M') }}</span>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <!-- Edit Button -->
+                        <button onclick="openModal('edit-{{ u.id }}')" class="btn"
+                            style="width: auto; padding: 5px 10px; font-size: 0.8rem;">Editar</button>
+
+                        <!-- Ban/Unban Button -->
+                        {% if u.banned_until %}
+                        <button onclick="openModal('unban-{{ u.id }}')" class="btn"
+                            style="width: auto; padding: 5px 10px; font-size: 0.8rem; background: var(--success);">Desbanir</button>
+                        {% else %}
+                        <button onclick="openModal('ban-{{ u.id }}')" class="btn"
+                            style="width: auto; padding: 5px 10px; font-size: 0.8rem; background: var(--danger);">Banir</button>
+                        {% endif %}
+
+                        <!-- Score Button -->
+                        <button onclick="openModal('score-{{ u.id }}')" class="btn"
+                            style="width: auto; padding: 5px 10px; font-size: 0.8rem; background: var(--success);">Pontos</button>
+                    </div>
+
+                    <!-- Modals -->
+                    <!-- Edit Modal -->
+                    <dialog id="edit-{{ u.id }}"
+                        style="padding: 20px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed;">
+                        <h3>Editar {{ u.username }}</h3>
+                        <form action="{{ url_for('admin_edit_user', user_id=u.id) }}" method="POST">
+                            <div class="form-group">
+                                <label>Novo Nome</label>
+                                <input type="text" name="username" placeholder="{{ u.username }}">
+                            </div>
+                            <div class="form-group">
+                                <label>Nova Senha</label>
+                                <input type="password" name="password" placeholder="Nova senha">
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" class="btn">Salvar</button>
+                                <button type="button" class="btn" style="background: #444;"
+                                    onclick="closeModal('edit-{{ u.id }}')">Cancelar</button>
+                            </div>
+                        </form>
+                    </dialog>
+
+                    <!-- Ban Modal -->
+                    <dialog id="ban-{{ u.id }}"
+                        style="padding: 20px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed;">
+                        <h3>Banir {{ u.username }}</h3>
+                        <form action="{{ url_for('admin_ban_user', user_id=u.id) }}" method="POST">
+                            <div class="form-group">
+                                <label>Horas de Banimento</label>
+                                <input type="number" name="hours" value="24">
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" class="btn" style="background: var(--danger)">Confirmar Ban</button>
+                                <button type="button" class="btn" style="background: #444;"
+                                    onclick="closeModal('ban-{{ u.id }}')">Cancelar</button>
+                            </div>
+                        </form>
+                    </dialog>
+
+                    <!-- Unban Modal -->
+                    <dialog id="unban-{{ u.id }}"
+                        style="padding: 20px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed;">
+                        <h3>Desbanir {{ u.username }}?</h3>
+                        <p>O usuário terá acesso imediato ao sistema.</p>
+                        <form action="{{ url_for('admin_ban_user', user_id=u.id) }}" method="POST">
+                            <input type="hidden" name="hours" value="0">
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button type="submit" class="btn" style="background: var(--success)">Confirmar Desban</button>
+                                <button type="button" class="btn" style="background: #444;"
+                                    onclick="closeModal('unban-{{ u.id }}')">Cancelar</button>
+                            </div>
+                        </form>
+                    </dialog>
+
+                    <!-- Score Modal -->
+                    <dialog id="score-{{ u.id }}"
+                        style="padding: 20px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed;">
+                        <h3>Gerenciar Pontos - {{ u.username }}</h3>
+                        <form action="{{ url_for('admin_manage_score', user_id=u.id) }}" method="POST">
+                            <div class="form-group">
+                                <label>Quantidade</label>
+                                <input type="number" name="points" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Ação</label>
+                                <select name="action"
+                                    style="width: 100%; padding: 10px; background: #333; color: white; border: none; border-radius: 4px;">
+                                    <option value="add">Adicionar</option>
+                                    <option value="remove">Remover</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button type="submit" class="btn" style="background: var(--success)">Confirmar</button>
+                                <button type="button" class="btn" style="background: #444;"
+                                    onclick="closeModal('score-{{ u.id }}')">Cancelar</button>
+                            </div>
+                        </form>
+                    </dialog>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function openModal(id) {
+        document.getElementById(id).showModal();
+    }
+    function closeModal(id) {
+        document.getElementById(id).close();
+    }
+</script>
+{% endblock %}

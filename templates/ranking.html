@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Ranking Global</h1>
+    <p style="color: var(--text-muted)">Os melhores alunos por total de acertos</p>
+</div>
+
+<div style="max-width: 800px; margin: 0 auto;">
+    <table class="ranking-table">
+        <thead>
+            <tr>
+                <th>Posição</th>
+                <th>Usuário</th>
+                <th>Pontuação Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user, score in leaders %}
+            <tr>
+                <td>
+                    {% if loop.index == 1 %}<span class="rank-1">1º 🥇</span>
+                    {% elif loop.index == 2 %}<span class="rank-2">2º 🥈</span>
+                    {% elif loop.index == 3 %}<span class="rank-3">3º 🥉</span>
+                    {% else %}{{ loop.index }}º{% endif %}
+                </td>
+                <td>
+                    {{ user.username }}
+                    {% if user.is_admin %}
+                    <span title="Administrador" style="margin-left: 5px; cursor: help;">👑</span>
+                    {% endif %}
+                </td>
+                <td>{{ score }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" style="text-align: center; color: #666;">Nenhum dado ainda.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

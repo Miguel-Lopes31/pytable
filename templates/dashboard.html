@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Seu Progresso</h1>
+    <p style="color: var(--text-muted)">Acompanhe sua evolução e identifique onde melhorar.</p>
+</div>
+
+<!-- Summary Cards -->
+<div class="grid-container" style="margin-bottom: 40px;">
+    <div class="table-card" style="cursor: default;">
+        <h3 id="total-games">-</h3>
+        <span style="font-size: 0.8rem; color: #666;">Jogos Completos</span>
+    </div>
+    <div class="table-card" style="cursor: default;">
+        <h3 id="avg-accuracy">-</h3>
+        <span style="font-size: 0.8rem; color: #666;">Precisão Média</span>
+    </div>
+    <div class="table-card" style="cursor: default;">
+        <h3 id="total-score">-</h3>
+        <span style="font-size: 0.8rem; color: #666;">Pontos Totais</span>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <div class="chart-card">
+        <h3 style="margin-bottom: 20px;">Precisão por Tabuada (%)</h3>
+        <canvas id="performanceChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <h3 style="margin-bottom: 20px;">Volume de Prática</h3>
+        <canvas id="volumeChart"></canvas>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
