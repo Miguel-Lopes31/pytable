@@ -36,7 +36,7 @@ Uma ferramenta para sala de aula:
 - **Tarefas de Casa**: Crie atividades personalizadas (ex: "Tabuada do 2 ao 5") com data de entrega definida.
 - **Vizualização de tarefas**: O professor pode vizualizar os alunos que entregaram as tarefas, editar as tarefas, e excluir as tarefas que desejar.
 
-**Limente de 3 turmas por professor** 
+**Somente 3 turmas por professor** 
 
 ---
 
@@ -55,7 +55,7 @@ O site foi desenvolvido como um **PWA (Progressive Web App)**. Isso significa qu
 ## Resumo Técnico (Stack)
 
 - **Linguagem & Backend**: Python 3.13 rodando Flask. Escolhido pela estabilidade e facilidade de manutenção.
-- **Banco de Dados Inteligente**:
+- **Banco de Dados**:
     - **Desenvolvimento Local**: SQLite (implementamos um sistema de *Auto-Migração* que detecta e corrige mudanças no banco automaticamente).
     - **Produção (Cloud)**: PostgreSQL hospedado no **Supabase**. 
 - **Frontend**:
@@ -70,9 +70,7 @@ O site foi desenvolvido como um **PWA (Progressive Web App)**. Isso significa qu
 
 **Concepção, Arquitetura e Modelagem de Dados:**
 
-Miguel Lopes
-
-🔗 [Linkedin](https://www.linkedin.com/in/miguel-lopes-ab8a97268/) 
+[Miguel Lopes](https://www.linkedin.com/in/miguel-lopes-ab8a97268/) 
 
 **Desenvolvimento Técnico (AI Powered):**
 * 🛠️ Google Antigravity 
@@ -80,6 +78,7 @@ Miguel Lopes
 * 🤖 Gemini 3 Pro
 
 ---
+
 
 
 
