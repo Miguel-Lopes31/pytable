@@ -110,9 +110,43 @@
     }
 
     function startTimeAttackMode() {
-        ui.confirm("Modo Contra o Relógio: 60 segundos para acertar o máximo possível! Preparado?", () => {
-            window.location.href = "{{ url_for('game') }}?mode=time_attack";
-        }, "Contra o Relógio");
+        // Show custom difficulty selection modal
+        const modalHtml = `
+            <div class="modal-overlay active" id="time-attack-modal">
+                <div class="modal-box" style="max-width: 450px;">
+                    <div class="modal-title">⏱️ Contra o Relógio</div>
+                    <div class="modal-body" style="margin-bottom: 15px;">
+                        Escolha a dificuldade:
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                        <button class="difficulty-btn easy" onclick="selectTimeAttackDifficulty(90)">
+                            <span class="diff-label">🟢 Fácil</span>
+                            <span class="diff-time">1:30</span>
+                        </button>
+                        <button class="difficulty-btn medium" onclick="selectTimeAttackDifficulty(60)">
+                            <span class="diff-label">🟡 Médio</span>
+                            <span class="diff-time">1:00</span>
+                        </button>
+                        <button class="difficulty-btn hard" onclick="selectTimeAttackDifficulty(30)">
+                            <span class="diff-label">🔴 Difícil</span>
+                            <span class="diff-time">0:30</span>
+                        </button>
+                    </div>
+                    <button class="modal-btn modal-btn-cancel" style="width: 100%; background: #333;" onclick="closeTimeAttackModal()">Cancelar</button>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    function selectTimeAttackDifficulty(seconds) {
+        closeTimeAttackModal();
+        window.location.href = "{{ url_for('game') }}?mode=time_attack&global_time=" + seconds;
+    }
+
+    function closeTimeAttackModal() {
+        const modal = document.getElementById('time-attack-modal');
+        if (modal) modal.remove();
     }
 
     function startSmartMode() {

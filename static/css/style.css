@@ -646,3 +646,90 @@ a {
         background: #252525;
     }
 }
+
+/* Time Attack Difficulty Buttons */
+.difficulty-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    color: white;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.difficulty-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.difficulty-btn:active {
+    transform: scale(0.98);
+}
+
+.difficulty-btn.easy {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.difficulty-btn.medium {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.difficulty-btn.hard {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.diff-label {
+    font-weight: 600;
+}
+
+.diff-time {
+    font-size: 1.3rem;
+    font-weight: 700;
+    opacity: 0.9;
+}
+
+/* Global Timer Display */
+.global-timer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: linear-gradient(135deg, #ffaa00, #ff8800);
+    padding: 8px 18px;
+    border-radius: 0 0 12px 0;
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: #000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(255, 170, 0, 0.3);
+    z-index: 5;
+    transition: background 0.3s;
+}
+
+.global-timer::before {
+    content: '⏱️';
+    font-size: 1.2rem;
+}
+
+.global-timer.warning {
+    background: linear-gradient(135deg, #ff6b6b, #ee5253);
+    animation: timer-pulse 0.5s infinite;
+}
+
+@keyframes timer-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}

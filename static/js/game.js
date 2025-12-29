@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tableConfig = dataEl.dataset.tables;
     const timeLimitStr = dataEl.dataset.time;
     const mode = dataEl.dataset.mode || 'normal';
+    const globalTimeLimit = parseInt(dataEl.dataset.globalTime) || 60;
 
     // Zombie Mode overrides
     let timeLimit = parseInt(timeLimitStr) || 5;
@@ -16,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const countdownEl = document.getElementById('countdown');
     const scoreEl = document.getElementById('score-display');
     const progressBar = document.getElementById('progress-bar');
+    const globalTimerDisplay = document.getElementById('global-timer-display');
+    const globalTimerText = document.getElementById('global-timer-text');
 
     let deck = [];
     let gameState = {
@@ -24,11 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentQuestion: null,
         details: [],
         active: false,
-        timerInterval: null
+        timerInterval: null,
+        globalTimerInterval: null,
+        globalTimeRemaining: globalTimeLimit
     };
 
     // Initialize Deck (No repeats logic)
-    // Tables selected: e.g. "2,3" -> Deck: 2x1...2x10, 3x1...3x10
     function initDeck() {
         let tables = [];
 
@@ -53,7 +57,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Start Game
+    // Format time as MM:SS
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Start Global Timer for Time Attack mode
+    function startGlobalTimer() {
+        if (mode !== 'time_attack') return;
+
+        globalTimerDisplay.style.display = 'flex';
+        gameState.globalTimeRemaining = globalTimeLimit;
+        globalTimerText.textContent = formatTime(gameState.globalTimeRemaining);
+
+        gameState.globalTimerInterval = setInterval(() => {
+            gameState.globalTimeRemaining--;
+            globalTimerText.textContent = formatTime(gameState.globalTimeRemaining);
+
+            // Add warning class when time is low
+            if (gameState.globalTimeRemaining <= 10) {
+                globalTimerDisplay.classList.add('warning');
+            }
+
+            if (gameState.globalTimeRemaining <= 0) {
+                clearInterval(gameState.globalTimerInterval);
+                endGame();
+            }
+        }, 1000);
+    }
+
     // Start Game - Refactored for Async
     const homeworkId = dataEl.dataset.homeworkId;
 
@@ -85,6 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreDisplay.innerHTML = '📝 Dever de Casa';
         scoreDisplay.style.color = '#4ecdc4';
         startStartCountdown();
+    } else if (mode === 'time_attack') {
+        initDeck();
+        scoreEl.innerHTML = `⏱️ Score: 0`;
+        scoreEl.style.color = '#ffaa00';
+        startStartCountdown();
     } else {
         initDeck();
         if (mode === 'zombie') {
@@ -106,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(timer);
                 overlay.style.display = 'none';
                 gameState.active = true;
+                startGlobalTimer();
                 nextQuestion();
             }
         }, 1000);
@@ -117,8 +157,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Stop specific question timer if running
         if (gameState.timerInterval) clearInterval(gameState.timerInterval);
 
+        // In time_attack mode, refill deck if empty
+        if (mode === 'time_attack' && deck.length === 0) {
+            initDeck();
+        }
+
         if (deck.length === 0) {
-            // If smart mode, maybe loop again? Or just end? Let's end for now as it's a "set" of training.
             endGame(true);
             return;
         }
@@ -134,8 +178,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         generateOptions(gameState.currentQuestion.answer);
 
-        // Start Question Timer
-        startQuestionTimer();
+        // Start Question Timer (not for time_attack mode - it uses global timer)
+        if (mode !== 'time_attack') {
+            startQuestionTimer();
+        }
     }
 
     function startQuestionTimer() {
@@ -214,8 +260,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isCorrect) {
             gameState.score++;
             if (btnElement) btnElement.classList.add('correct-anim');
-            scoreEl.textContent = mode === 'zombie' ? `🧟 Score: ${gameState.score}` : `Pontos: ${gameState.score}`;
-            setTimeout(nextQuestion, 500);
+
+            if (mode === 'time_attack') {
+                scoreEl.textContent = `⏱️ Score: ${gameState.score}`;
+            } else if (mode === 'zombie') {
+                scoreEl.textContent = `🧟 Score: ${gameState.score}`;
+            } else {
+                scoreEl.textContent = `Pontos: ${gameState.score}`;
+            }
+
+            setTimeout(nextQuestion, mode === 'time_attack' ? 200 : 500);
         } else {
             if (btnElement) {
                 btnElement.classList.add('shake');
@@ -228,19 +282,31 @@ document.addEventListener('DOMContentLoaded', () => {
             if (mode === 'zombie') {
                 setTimeout(endGame, 1000);
             } else {
-                setTimeout(nextQuestion, 600);
+                setTimeout(nextQuestion, mode === 'time_attack' ? 300 : 600);
             }
         }
     }
 
     function endGame() {
         gameState.active = false;
+
+        // Clear all timers
+        if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+        if (gameState.globalTimerInterval) clearInterval(gameState.globalTimerInterval);
+
         overlay.style.display = 'flex';
 
         let title = 'Fim de Jogo!';
         let message = `Pontuação: ${gameState.score} / ${gameState.totalQuestions}`;
 
-        if (mode === 'zombie') {
+        if (mode === 'time_attack') {
+            title = '⏱️ Tempo Esgotado!';
+            message = `
+                <div style="font-size: 3rem; margin-bottom: 15px; color: #ffaa00;">🏆</div>
+                <p style="font-size: 2rem; font-weight: bold; color: #ffaa00; margin-bottom: 10px;">${gameState.score}</p>
+                <p style="color: #888;">perguntas corretas em ${globalTimeLimit} segundos</p>
+            `;
+        } else if (mode === 'zombie') {
             if (gameState.score === 100) { // 10x10 tables = 100 questions
                 title = '🧟 VICTORY! 🧟';
                 message = '<p style="color: #50aa50; font-size: 1.2rem; font-weight: bold;">VOCÊ SOBREVIVEU AO APOCALIPSE!</p><p>Você ganhou o emblema Zumbi!</p>';
