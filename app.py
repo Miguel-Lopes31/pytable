@@ -172,6 +172,11 @@ def get_level_data(total_score):
 def menu():
     user = User.query.get(session['user_id'])
     
+    # Safety check: if user doesn't exist in DB (e.g., old session), clear and redirect
+    if not user:
+        session.clear()
+        return redirect(url_for('login'))
+    
     # Calculate Level
     total_score = db.session.query(func.sum(GameSession.score)).filter_by(user_id=user.id).scalar() or 0
     level_data = get_level_data(total_score)
