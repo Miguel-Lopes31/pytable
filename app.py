@@ -101,13 +101,20 @@ def register():
         if User.query.filter_by(username=username).first():
             return render_template('auth.html', error="Username already exists", mode='register')
         
-        new_user = User(username=username, password_hash=generate_password_hash(password))
-        db.session.add(new_user)
-        db.session.commit()
-        
-        session['user_id'] = new_user.id
-        session['username'] = new_user.username
-        return redirect(url_for('menu'))
+        try:
+            new_user = User(username=username, password_hash=generate_password_hash(password))
+            db.session.add(new_user)
+            db.session.commit()
+            
+            session['user_id'] = new_user.id
+            session['username'] = new_user.username
+            return redirect(url_for('menu'))
+        except Exception as e:
+            db.session.rollback()
+            print(f"ERROR creating user: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return render_template('auth.html', error=f"Erro ao criar usuário: {str(e)}", mode='register')
         
     return render_template('auth.html', mode='register')
 
