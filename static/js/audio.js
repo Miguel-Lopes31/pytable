@@ -7,7 +7,7 @@ class SoundManager {
     constructor() {
         this.audioContext = null;
         this.muted = localStorage.getItem('pytable_muted') === 'true';
-        this.masterVolume = 0.3; // 30% max volume
+        this.masterVolume = 0.5; // Increased volume (was 0.3)
         this.ambientNode = null;
         this.ambientGain = null;
         this.tickInterval = null;

@@ -400,7 +400,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 details: gameState.details,
                 mode: mode,
                 operation: operationMode,
-                homework_id: dataEl.dataset.homeworkId
+                homework_id: dataEl.dataset.homeworkId,
+                score: gameState.score,
+                total_questions: gameState.totalQuestions
             })
         }).then(res => res.json())
             .then(data => {
