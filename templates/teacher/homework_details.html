@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Detalhes da Tarefa</h1>
+    <p style="color: var(--text-muted)">{{ classroom.name }} - {{ homework.description }}</p>
+</div>
+
+<div class="table-card" style="text-align: left;">
+    <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2 style="margin: 0;">Relatório de Entregas</h2>
+            <div style="font-size: 0.9rem; color: #888; margin-top: 5px;">
+                Prazo: <span style="color: white;">{{ homework.deadline.strftime('%d/%m/%Y') }}</span>
+            </div>
+        </div>
+        <a href="{{ url_for('view_classroom', id=classroom.id) }}" class="btn"
+            style="background: #444; width: auto;">Voltar</a>
+    </div>
+
+    <table class="ranking-table">
+        <thead>
+            <tr>
+                <th>Aluno</th>
+                <th>Status</th>
+                <th>Acertos / Erros</th>
+                <th>Data de Entrega</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td>{{ s.name }}</td>
+                <td>
+                    {% if s.status == 'Entregue' %}
+                    {% if s.is_late %}
+                    <span style="color: #f1c40f;">Entregue com Atraso</span>
+                    {% else %}
+                    <span style="color: var(--success);">✔ Entregue</span>
+                    {% endif %}
+                    {% elif s.status == 'Atrasado' %}
+                    <span style="color: var(--danger);">Não Entregue (Atrasado)</span>
+                    {% else %}
+                    <span style="color: #888;">Pendente</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if s.status == 'Entregue' %}
+                    {% set errors = s.total_count - s.correct_count %}
+                    <span style="color: var(--success);">{{ s.correct_count }} Acertos</span> /
+                    <span style="color: var(--danger);">{{ errors }} Erros</span>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>{{ s.submitted_at }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align: center; color: #666;">Nenhum aluno nesta turma.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

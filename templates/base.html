@@ -4,7 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2962ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pytable">
     <title>Pytable - Aprenda Tabuada</title>
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -19,6 +25,20 @@
                 class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">Dashboard</a>
             <a href="{{ url_for('ranking') }}"
                 class="{{ 'active' if request.endpoint == 'ranking' else '' }}">Ranking</a>
+
+            {% if not current_user_is_teacher %}
+            {% if current_user_in_classroom %}
+            <a href="{{ url_for('student_classroom') }}">🏫 Minha Turma</a>
+            {% else %}
+            <a href="{{ url_for('student_classroom') }}">🏫 Minhas Turmas</a>
+            <a href="#" onclick="document.getElementById('join-class-modal').showModal(); return false;">🎓 Entrar em
+                Turma</a>
+            {% endif %}
+            {% endif %}
+            {% if current_user_is_teacher %}
+            <a href="{{ url_for('teacher_dashboard') }}" style="color: #e67e22;">👨‍🏫 Painel Professor</a>
+            {% endif %}
+
             {% if current_user_is_admin %}
             <a href="{{ url_for('admin_dashboard') }}" style="color: gold;">Admin</a>
             {% endif %}
@@ -33,6 +53,119 @@
         {% block content %}{% endblock %}
     </div>
 
+    <!-- Join Class Modal -->
+    <dialog id="join-class-modal"
+        style="padding: 20px; border-radius: 8px; border: 1px solid #4ecdc4; background: #1a1a1a; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed;">
+        <h3 style="color: #4ecdc4;">Entrar em uma Turma</h3>
+        <p>Digite o código fornecido pelo seu professor.</p>
+        <div class="form-group">
+            <input type="text" id="class-code-input" placeholder="Ex: ABC-123"
+                style="text-transform: uppercase; letter-spacing: 2px; text-align: center;">
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button onclick="joinClass()" class="btn"
+                style="background: #4ecdc4; color: #1a1a1a; font-weight: bold;">Entrar</button>
+            <button onclick="document.getElementById('join-class-modal').close()" class="btn"
+                style="background: #444;">Cancelar</button>
+        </div>
+    </dialog>
+
+    <!-- Custom Modal System -->
+    <div id="ui-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modal-title" class="modal-title">Alert</div>
+            <div id="modal-body" class="modal-body">Message goes here...</div>
+            <div class="modal-actions" id="modal-actions">
+                <!-- Buttons injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ui = {
+            modal: document.getElementById('ui-modal'),
+            title: document.getElementById('modal-title'),
+            body: document.getElementById('modal-body'),
+            actions: document.getElementById('modal-actions'),
+
+            show: function (title, msg, buttons) {
+                this.title.textContent = title;
+                this.body.textContent = msg;
+                this.actions.innerHTML = '';
+
+                buttons.forEach(btn => {
+                    const b = document.createElement('button');
+                    b.className = `modal-btn modal-btn-${btn.type}`;
+                    b.textContent = btn.text;
+                    b.onclick = () => {
+                        this.close();
+                        if (btn.click) btn.click();
+                    };
+                    this.actions.appendChild(b);
+                });
+
+                this.modal.classList.add('active');
+            },
+
+            close: function () {
+                this.modal.classList.remove('active');
+            },
+
+            alert: function (msg, title = "Atenção") {
+                this.show(title, msg, [
+                    { text: 'OK', type: 'confirm' }
+                ]);
+            },
+
+            confirm: function (msg, onConfirm, title = "Confirmação") {
+                this.show(title, msg, [
+                    { text: 'Cancelar', type: 'cancel' },
+                    { text: 'Confirmar', type: 'confirm', click: onConfirm }
+                ]);
+            }
+        };
+
+        // Helper to handle form submits
+        function confirmAction(event, form, msg) {
+            event.preventDefault(); // Stop form
+            ui.confirm(msg, () => {
+                form.submit();
+            });
+        }
+
+        // Join Class function
+        function joinClass() {
+            const code = document.getElementById('class-code-input').value.toUpperCase();
+            if (!code) return;
+
+            fetch('/api/join_class', {
+                method: 'POST',
+                body: new URLSearchParams({ 'code': code }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        ui.alert(data.error, "Erro");
+                    } else {
+                        document.getElementById('join-class-modal').close();
+                        ui.alert("Sucesso! Você entrou na turma: " + data.classname, "Sucesso");
+                    }
+                });
+        }
+    </script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(reg => console.log('SW registered'))
+                    .catch(err => console.log('SW registration failed'));
+            });
+        }
+    </script>
 </body>
 
 </html>

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <h1 style="margin: 0;">{{ classroom.name }}</h1>
+        <span
+            style="background: #333; padding: 5px 10px; border-radius: 4px; font-size: 1rem; font-family: monospace;">CODE:
+            {{ classroom.code }}</span>
+    </div>
+    <p style="color: var(--text-muted)">Detalhes da Turma</p>
+</div>
+
+{% if pending_students %}
+<div class="table-card" style="text-align: left; overflow-x: auto; margin-bottom: 30px; border: 2px solid #ffaa00;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="color: #ffaa00;">⏳ Solicitações Pendentes</h2>
+    </div>
+    <table class="ranking-table">
+        <thead>
+            <tr>
+                <th>Aluno</th>
+                <th>Solicitou em</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in pending_students %}
+            <tr>
+                <td>{{ s.username }}</td>
+                <td>{{ s.joined_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>
+                    <div style="display: flex; gap: 5px;">
+                        <form action="{{ url_for('approve_student', classroom_id=classroom.id, student_id=s.id) }}"
+                            method="POST" style="margin: 0;">
+                            <button type="submit" class="btn"
+                                style="background: var(--success); padding: 5px 10px; font-size: 0.8rem; width: auto;">✓
+                                Aceitar</button>
+                        </form>
+                        <form action="{{ url_for('reject_student', classroom_id=classroom.id, student_id=s.id) }}"
+                            method="POST" style="margin: 0;">
+                            <button type="button" class="btn"
+                                onclick="confirmAction(event, this.form, 'Recusar solicitação de {{ s.username }}?')"
+                                style="background: var(--danger); padding: 5px 10px; font-size: 0.8rem; width: auto;">✗
+                                Recusar</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="table-card" style="text-align: left; overflow-x: auto; margin-bottom: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Alunos Matriculados</h2>
+        <!-- Kick explanation: small text -->
+    </div>
+    <table class="ranking-table">
+        <thead>
+            <tr>
+                <th>Aluno</th>
+                <th>Entrou em</th>
+                <th>Nível</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in students %}
+            <tr>
+                <td>{{ s.username }}</td>
+                <td>{{ s.joined_at.strftime('%d/%m/%Y') }}</td>
+                <td>{{ s.level }}</td>
+                <td>
+                <td>
+                    <form action="{{ url_for('kick_student', id=classroom.id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="student_id" value="{{ s.id }}">
+                        <button type="button" class="btn"
+                            onclick="confirmAction(event, this.form, 'Remover {{ s.username }} da turma?')"
+                            style="background: var(--danger); padding: 2px 8px; font-size: 0.7rem; width: auto;">Remover</button>
+                    </form>
+                </td>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align: center; color: #666;">Nenhum aluno entrou nesta turma ainda.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="table-card" style="text-align: left; overflow-x: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Tarefas & Dever de Casa</h2>
+        <button class="btn" style="width: auto; background: var(--success);"
+            onclick="document.getElementById('task-modal').showModal()">+ Nova Tarefa</button>
+    </div>
+
+    {% if classroom.homeworks %}
+    <table class="ranking-table">
+        <thead>
+            <tr>
+                <th>Descrição</th>
+                <th>Prazo</th>
+                <th>Entregas</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for h in classroom.homeworks %}
+            <tr>
+                <td>{{ h.description }}</td>
+                <td>{{ h.deadline.strftime('%d/%m/%Y') }}</td>
+                <td>
+                    <!-- Simple count -->
+                    {{ h.submissions|length }} / {{ students|length }}
+                </td>
+                <td>
+                    <div style="display: flex; gap: 5px;">
+                        <a href="{{ url_for('view_homework_details', id=h.id) }}" class="btn"
+                            style="background: var(--info); padding: 5px 10px; font-size: 0.8rem; width: auto; text-decoration: none;">Ver
+                            Detalhes</a>
+
+                        <form action="{{ url_for('delete_task', id=h.id) }}" method="POST" style="margin: 0;">
+                            <button type="button" class="btn"
+                                onclick="confirmAction(event, this.form, 'Excluir esta tarefa e todas as entregas?')"
+                                style="background: var(--danger); padding: 5px 10px; font-size: 0.8rem; width: auto;">Excluir</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: #666;">Nenhuma tarefa criada.</p>
+    {% endif %}
+</div>
+
+<!-- Task Modal -->
+<dialog id="task-modal"
+    style="padding: 20px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed;">
+    <h3>Criar Nova Tarefa</h3>
+    <form action="{{ url_for('create_task', id=classroom.id) }}" method="POST">
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+            <label>Tabuada do</label>
+            <input type="number" name="start_table" min="1" max="10" required style="width: 60px;">
+            <label>ao</label>
+            <input type="number" name="end_table" min="1" max="10" required style="width: 60px;">
+        </div>
+        <div class="form-group">
+            <label>Prazo (dias)</label>
+            <input type="number" name="days" value="7" min="1" required>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="submit" class="btn" style="background: var(--success)">Criar</button>
+            <button type="button" class="btn" style="background: #444;"
+                onclick="document.getElementById('task-modal').close()">Cancelar</button>
+        </div>
+    </form>
+</dialog>
+
+<div style="text-align: center; margin-top: 30px;">
+    <a href="{{ url_for('teacher_dashboard') }}" class="btn" style="background: #444; width: auto;">Voltar ao Painel</a>
+</div>
+{% endblock %}

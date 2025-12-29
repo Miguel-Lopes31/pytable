@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Painel do Professor 👨‍🏫</h1>
+    <p style="color: var(--text-muted)">Gerencie suas turmas e acompanhe seus alunos.</p>
+</div>
+
+<div class="table-card" style="text-align: left; margin-bottom: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Suas Turmas</h2>
+        <button class="btn" style="width: auto; background: var(--success);"
+            onclick="document.getElementById('create-modal').showModal()">+ Criar Turma</button>
+    </div>
+
+    {% if classrooms %}
+    <div class="grid-container" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+        {% for c in classrooms %}
+        <div class="table-card" style="cursor: pointer; border: 1px solid #444;"
+            onclick="window.location.href='{{ url_for('view_classroom', id=c.id) }}'">
+            <h3 style="color: var(--primary-blue);">{{ c.name }}</h3>
+            <div
+                style="font-size: 1.2rem; margin: 10px 0; font-family: monospace; background: #222; padding: 5px; border-radius: 4px;">
+                CÓDIGO: <span style="color: var(--warning);">{{ c.code }}</span>
+            </div>
+            <p style="color: #666; font-size: 0.9rem;">Clique para ver detalhes</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: #666; text-align: center; padding: 20px;">Você ainda não criou nenhuma turma.</p>
+    {% endif %}
+</div>
+
+<!-- Create Modal -->
+<dialog id="create-modal"
+    style="padding: 20px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; top: 50%; left: 50%; transform: translate(-50%, -50%); position: fixed;">
+    <h3>Criar Nova Turma</h3>
+    <form action="{{ url_for('create_classroom') }}" method="POST">
+        <div class="form-group">
+            <label>Nome da Turma (Ex: 3º Ano B)</label>
+            <input type="text" name="name" required placeholder="Digite o nome...">
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="submit" class="btn" style="background: var(--success)">Criar</button>
+            <button type="button" class="btn" style="background: #444;"
+                onclick="document.getElementById('create-modal').close()">Cancelar</button>
+        </div>
+    </form>
+</dialog>
+
+<div style="text-align: center; margin-top: 30px;">
+    <a href="{{ url_for('menu') }}" class="btn" style="background: #444; width: auto;">Voltar ao Menu</a>
+</div>
+{% endblock %}

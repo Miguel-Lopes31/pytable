@@ -11,6 +11,7 @@
     --text-muted: #b0bec5;
     --danger: #ff1744;
     --success: #00e676;
+    --info: #00bcd4;
     --border-radius: 12px;
 }
 
@@ -29,7 +30,10 @@ body {
     flex-direction: column;
 }
 
-a { text-decoration: none; color: inherit; }
+a {
+    text-decoration: none;
+    color: inherit;
+}
 
 /* Navbar */
 .navbar {
@@ -37,7 +41,8 @@ a { text-decoration: none; color: inherit; }
     justify-content: space-between;
     align-items: center;
     padding: 1.5rem 5%;
-    background: transparent; /* Minimalist */
+    background: transparent;
+    /* Minimalist */
 }
 
 .logo {
@@ -55,7 +60,8 @@ a { text-decoration: none; color: inherit; }
     transition: color 0.3s;
 }
 
-.nav-links a:hover, .nav-links a.active {
+.nav-links a:hover,
+.nav-links a.active {
     color: var(--text-main);
 }
 
@@ -74,7 +80,7 @@ a { text-decoration: none; color: inherit; }
     border-radius: var(--border-radius);
     width: 100%;
     max-width: 400px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     text-align: center;
 }
 
@@ -235,14 +241,16 @@ a { text-decoration: none; color: inherit; }
     padding: 20px;
     font-size: 1.5rem;
     border-radius: var(--border-radius);
-    border: 2px solid transparent; /* default border */
+    border: 2px solid transparent;
+    /* default border */
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .option-btn:hover {
     background: #252525;
-    border-color: #444; /* Added subtle hover border effect */
+    border-color: #444;
+    /* Added subtle hover border effect */
 }
 
 /* Countdown Overlay */
@@ -267,9 +275,20 @@ a { text-decoration: none; color: inherit; }
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* Animations Logic classes */
@@ -285,11 +304,25 @@ a { text-decoration: none; color: inherit; }
 }
 
 @keyframes shake {
-    0% { transform: translateX(0); }
-    25% { transform: translateX(-10px); }
-    50% { transform: translateX(10px); }
-    75% { transform: translateX(-10px); }
-    100% { transform: translateX(0); }
+    0% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-10px);
+    }
+
+    50% {
+        transform: translateX(10px);
+    }
+
+    75% {
+        transform: translateX(-10px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
 }
 
 /* Dashboard */
@@ -314,7 +347,8 @@ a { text-decoration: none; color: inherit; }
     overflow: hidden;
 }
 
-.ranking-table th, .ranking-table td {
+.ranking-table th,
+.ranking-table td {
     padding: 15px 20px;
     text-align: left;
     border-bottom: 1px solid #333;
@@ -330,6 +364,285 @@ a { text-decoration: none; color: inherit; }
     border-bottom: none;
 }
 
-.rank-1 { color: #ffd700; font-weight: bold; }
-.rank-2 { color: #c0c0c0; font-weight: bold; }
-.rank-3 { color: #cd7f32; font-weight: bold; }
+.rank-1 {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.rank-2 {
+    color: #c0c0c0;
+    font-weight: bold;
+}
+
+/* Modal System */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-box {
+    background: var(--card-bg);
+    border: 1px solid #333;
+    width: 90%;
+    max-width: 400px;
+    border-radius: var(--border-radius);
+    padding: 25px;
+    text-align: center;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.active .modal-box {
+    transform: translateY(0);
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 10px;
+}
+
+.modal-body {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.9rem;
+    flex: 1;
+}
+
+.modal-btn-confirm {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.modal-btn-confirm:hover {
+    background: var(--primary-hover);
+}
+
+.modal-btn-cancel:hover {
+    background: #444;
+}
+
+/* ========== RESPONSIVE STYLES ========== */
+
+/* Tablet and smaller */
+@media (max-width: 768px) {
+
+    /* Navbar */
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 1rem 3%;
+    }
+
+    .nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .nav-links a {
+        margin-left: 0;
+        font-size: 0.85rem;
+        padding: 5px 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 6px;
+    }
+
+    /* Page headers */
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+
+    /* Grid for table cards */
+    .grid-container {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+    }
+
+    .table-card {
+        padding: 12px 8px;
+    }
+
+    .table-card h3 {
+        font-size: 1.2rem;
+    }
+
+    /* Buttons */
+    .btn-large {
+        padding: 14px 25px;
+        font-size: 1rem;
+    }
+
+    /* Auth box */
+    .auth-box {
+        padding: 25px;
+    }
+
+    /* Game area */
+    .game-container {
+        padding: 20px;
+    }
+
+    .question-display {
+        font-size: 2.5rem !important;
+    }
+
+    .answer-input {
+        font-size: 2rem !important;
+        padding: 15px !important;
+    }
+
+    /* Ranking table */
+    .ranking-table th,
+    .ranking-table td {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+    }
+
+    /* Container */
+    .container {
+        padding: 15px 3%;
+    }
+}
+
+/* Mobile phones */
+@media (max-width: 480px) {
+
+    /* Navbar even more compact */
+    .logo {
+        font-size: 1.2rem;
+    }
+
+    .nav-links a {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+
+    /* Headers */
+    .page-header h1 {
+        font-size: 1.3rem;
+    }
+
+    /* Grid 4 columns on small phones */
+    .grid-container {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .table-card {
+        padding: 10px 5px;
+    }
+
+    .table-card h3 {
+        font-size: 1rem;
+    }
+
+    .table-card span {
+        font-size: 0.7rem;
+    }
+
+    /* Game specific */
+    .question-display {
+        font-size: 2rem !important;
+    }
+
+    .answer-input {
+        font-size: 1.5rem !important;
+        width: 100% !important;
+        max-width: 200px !important;
+    }
+
+    /* Action buttons */
+    .btn {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .btn-large {
+        padding: 12px 20px;
+        font-size: 0.95rem;
+    }
+
+    /* Modal */
+    .modal-box {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
+    }
+
+    /* Tables */
+    .ranking-table th,
+    .ranking-table td {
+        padding: 8px 5px;
+        font-size: 0.75rem;
+    }
+
+    /* Dialog/Join Class */
+    dialog {
+        width: 95% !important;
+        padding: 15px !important;
+    }
+
+    /* Student dashboard task cards */
+    .table-card div[style*="display: flex"] {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Touch-friendly buttons */
+@media (hover: none) {
+
+    .btn:hover,
+    .table-card:hover {
+        transform: none;
+    }
+
+    .btn:active {
+        transform: scale(0.98);
+    }
+
+    .table-card:active {
+        background: #252525;
+    }
+}

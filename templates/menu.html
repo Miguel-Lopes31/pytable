@@ -61,6 +61,10 @@
         onclick="startSmartMode()">Treino 🧠</button>
 </div>
 
+
+
+
+
 <script>
     let selected = new Set();
 
@@ -90,7 +94,7 @@
 
     function startGame() {
         if (selected.size === 0) {
-            alert("Por favor, selecione pelo menos uma tabuada.");
+            ui.alert("Por favor, selecione pelo menos uma tabuada.");
             return;
         }
         const tables = Array.from(selected).join(',');
@@ -100,20 +104,22 @@
     }
 
     function startZombieMode() {
-        if (confirm("Modo Zumbi: Todas as tabuadas, 5 segundos, errou perdeu. Aceita o desafio?")) {
+        ui.confirm("Modo Zumbi: Todas as tabuadas, 5 segundos, errou perdeu. Aceita o desafio?", () => {
             window.location.href = "{{ url_for('game') }}?mode=zombie";
-        }
+        }, "Modo Zumbi");
     }
 
     function startTimeAttackMode() {
-        if (confirm("Modo Contra o Relógio: 60 segundos para acertar o máximo possível! Preparado?")) {
+        ui.confirm("Modo Contra o Relógio: 60 segundos para acertar o máximo possível! Preparado?", () => {
             window.location.href = "{{ url_for('game') }}?mode=time_attack";
-        }
+        }, "Contra o Relógio");
     }
 
     function startSmartMode() {
         // Direct entry, maybe a tooltip or small alert?
         window.location.href = "{{ url_for('game') }}?mode=smart";
     }
+
+
 </script>
 {% endblock %}

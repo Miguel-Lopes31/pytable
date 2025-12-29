@@ -3,8 +3,8 @@
 {% block content %}
 <!-- Hidden config -->
 <!-- We pass 'tables' and 'time' from query params to the dataset -->
-<div id="game-data" data-tables="{{ request.args.get('tables', '1') }}" data-time="{{ request.args.get('time', '5') }}"
-    data-mode="{{ request.args.get('mode', 'normal') }}">
+<div id="game-data" data-tables="{{ tables|default('1') }}" data-time="{{ request.args.get('time', 10) }}"
+    data-mode="{{ request.args.get('mode', 'normal') }}" data-homework-id="{{ request.args.get('homework_id', '') }}">
 </div>
 
 <div class="overlay" id="overlay">

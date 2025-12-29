@@ -55,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start Game
     // Start Game - Refactored for Async
+    const homeworkId = dataEl.dataset.homeworkId;
+
     if (mode === 'smart') {
         const scoreDisplay = document.getElementById('score-display');
         scoreDisplay.innerHTML = '🧠 Carregando seus erros...';
@@ -77,6 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 startStartCountdown();
             });
 
+    } else if (mode === 'homework') {
+        initDeck();
+        const scoreDisplay = document.getElementById('score-display');
+        scoreDisplay.innerHTML = '📝 Dever de Casa';
+        scoreDisplay.style.color = '#4ecdc4';
+        startStartCountdown();
     } else {
         initDeck();
         if (mode === 'zombie') {
@@ -263,6 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({
                 tables: tableConfig, // Will serve as record, even if mode overridden
                 mode: mode, // SEND MODE TO SERVER
+                homework_id: dataEl.dataset.homeworkId, // Send ID if exists
                 score: gameState.score,
                 total_questions: gameState.totalQuestions,
                 details: gameState.details

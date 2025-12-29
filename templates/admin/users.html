@@ -94,6 +94,11 @@
                                     u.zombie_badge %}checked{% endif %}>
                                 <label for="zombie-check-{{ u.id }}">Zombie Badge 🧟</label>
                             </div>
+                            <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" name="is_teacher" id="teacher-check-{{ u.id }}" {% if
+                                    u.is_teacher %}checked{% endif %}>
+                                <label for="teacher-check-{{ u.id }}">Professor 👨‍🏫</label>
+                            </div>
                             <div style="display: flex; gap: 10px;">
                                 <button type="submit" class="btn">Salvar</button>
                                 <button type="button" class="btn" style="background: #444;"
