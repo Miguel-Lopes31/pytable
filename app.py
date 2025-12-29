@@ -512,26 +512,51 @@ def get_smart_deck():
 
 # --- Teacher Mode Implementation ---
 
-# Migration Check (Simple SQLite Column add)
+# Migration Check (Compatible with SQLite and PostgreSQL)
 def check_and_migrate():
-    with app.app_context():
-        inspector = db.inspect(db.engine)
-        
-        # Check for is_teacher column
-        user_columns = [c['name'] for c in inspector.get_columns('user')]
-        if 'is_teacher' not in user_columns:
-            print("Migrating: Adding is_teacher to User table...")
-            with db.engine.connect() as conn:
-                conn.execute(db.text("ALTER TABLE user ADD COLUMN is_teacher BOOLEAN DEFAULT 0"))
-                conn.commit()
-        
-        # Check for approved column in student_classroom
-        sc_columns = [c['name'] for c in inspector.get_columns('student_classroom')]
-        if 'approved' not in sc_columns:
-            print("Migrating: Adding approved to StudentClassroom table...")
-            with db.engine.connect() as conn:
-                conn.execute(db.text("ALTER TABLE student_classroom ADD COLUMN approved BOOLEAN DEFAULT 0"))
-                conn.commit()
+    try:
+        with app.app_context():
+            inspector = db.inspect(db.engine)
+            is_postgres = 'postgresql' in str(db.engine.url)
+            
+            # Get proper table name (PostgreSQL needs quotes for reserved words)
+            user_table = '"user"' if is_postgres else 'user'
+            
+            # Check if tables exist first
+            tables = inspector.get_table_names()
+            
+            # Check for is_teacher column (only if user table exists)
+            if 'user' in tables:
+                user_columns = [c['name'] for c in inspector.get_columns('user')]
+                if 'is_teacher' not in user_columns:
+                    print("Migrating: Adding is_teacher to User table...")
+                    try:
+                        with db.engine.connect() as conn:
+                            if is_postgres:
+                                conn.execute(db.text(f'ALTER TABLE {user_table} ADD COLUMN is_teacher BOOLEAN DEFAULT FALSE'))
+                            else:
+                                conn.execute(db.text("ALTER TABLE user ADD COLUMN is_teacher BOOLEAN DEFAULT 0"))
+                            conn.commit()
+                    except Exception as e:
+                        print(f"is_teacher column may already exist or error: {e}")
+            
+            # Check for approved column in student_classroom (only if table exists)
+            if 'student_classroom' in tables:
+                sc_columns = [c['name'] for c in inspector.get_columns('student_classroom')]
+                if 'approved' not in sc_columns:
+                    print("Migrating: Adding approved to StudentClassroom table...")
+                    try:
+                        with db.engine.connect() as conn:
+                            if is_postgres:
+                                conn.execute(db.text("ALTER TABLE student_classroom ADD COLUMN approved BOOLEAN DEFAULT FALSE"))
+                            else:
+                                conn.execute(db.text("ALTER TABLE student_classroom ADD COLUMN approved BOOLEAN DEFAULT 0"))
+                            conn.commit()
+                    except Exception as e:
+                        print(f"approved column may already exist or error: {e}")
+    except Exception as e:
+        print(f"Migration check failed: {e}")
+        # Don't crash the app, let db.create_all handle table creation
 
 # Teacher Decorator
 def teacher_required(f):
