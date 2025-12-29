@@ -4,8 +4,8 @@
 
 Aproveite ao máximo esta plataforma! Um projeto open source, desenvolvido com o apoio de IA, criado para evoluir de forma colaborativa. Sinta-se à vontade para contribuir e trazer novas melhorias.
 
-https://pytable.onrender.com/menu
 
+(Pytable)[https://pytable.onrender.com/login]
 ---
 
 ##  O Que Você Encontra Aqui?
@@ -81,4 +81,5 @@ Miguel Lopes
 * 🤖 Gemini 3 Pro
 
 ---
+
 
