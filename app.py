@@ -525,73 +525,7 @@ def get_heatmap():
     return jsonify(heatmap)
 
 
-@app.route('/api/smart_deck')
-@login_required
-def get_smart_deck():
-    user_id = session['user_id']
-    
-    # Logic: Find "Active Errors" for the current operation mode.
-    operation_mode = session.get('operation_mode', 'multiply')
 
-    # An active error is a (base, mult) pair where the LATEST attempt was Incorrect.
-    # If the latest attempt was Correct, it's considered "resolved" for now and removed from priority.
-    
-    # 1. Subquery to find the latest QuestionLog ID for each (base, mult) pair for this user AND mode
-    latest_attempts_subquery = db.session.query(
-        QuestionLog.number_base,
-        QuestionLog.number_mult,
-        func.max(QuestionLog.id).label('max_id')
-    ).join(GameSession).filter(
-        GameSession.user_id == user_id,
-        or_(QuestionLog.operation_type == operation_mode, 
-            and_(operation_mode == 'multiply', QuestionLog.operation_type == None)) # Handle legacy
-    ).group_by(QuestionLog.number_base, QuestionLog.number_mult).subquery()
-    
-    # 2. Query the actual logs that match these max_ids AND are incorrect
-    active_errors = db.session.query(QuestionLog).join(
-        latest_attempts_subquery, 
-        QuestionLog.id == latest_attempts_subquery.c.max_id
-    ).filter(
-        QuestionLog.is_correct == False
-    ).all()
-    
-    deck_data = []
-    
-    # Add active errors to deck
-    mistakes_list = [{'base': m.number_base, 'mult': m.number_mult, 'is_mistake': True} for m in active_errors]
-    
-    # If user has many errors, prioritize? For now take all (or limit if deck too big)
-    # Let's shuffle the mistakes so they aren't always in same order if there are many
-    import random
-    random.shuffle(mistakes_list)
-    
-    for m in mistakes_list:
-        deck_data.append(m)
-        if len(deck_data) >= 20: # Cap mistakes at 20 per session to avoid fatigue? Or show all?
-            break
-            
-    # 3. Fallback: If deck is empty (User is perfect!) or small, fill with Hard Questions
-    # This ensures the mode is always playable.
-    hard_questions = [
-        (6,7), (6,8), (6,9), (7,6), (7,7), (7,8), (7,9), 
-        (8,6), (8,7), (8,8), (8,9), (9,6), (9,7), (9,8), (9,9)
-    ]
-    
-    while len(deck_data) < 10: # Ensure at least 10 cards
-        base, mult = random.choice(hard_questions)
-        # Avoid duplicates if possible?
-        # Simple check
-        if not any(d['base'] == base and d['mult'] == mult for d in deck_data):
-             deck_data.append({'base': base, 'mult': mult, 'is_mistake': False})
-        else:
-             # Just add it anyway, repetition is good practice
-             deck_data.append({'base': base, 'mult': mult, 'is_mistake': False})
-
-    # Calculate answer for convenience
-    for card in deck_data:
-        card['answer'] = card['base'] * card['mult']
-        
-    return jsonify(deck_data)
 
 # --- Teacher Mode Implementation ---
 

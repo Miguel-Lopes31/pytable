@@ -118,29 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Start Game - Refactored for Async
     const homeworkId = dataEl.dataset.homeworkId;
 
-    if (mode === 'smart') {
-        const scoreDisplay = document.getElementById('score-display');
-        scoreDisplay.innerHTML = '🧠 Carregando seus erros...';
-
-        // Fetch smart deck
-        fetch('/api/smart_deck')
-            .then(r => r.json())
-            .then(data => {
-                deck = data;
-                scoreDisplay.innerHTML = '🧠 Treino Inteligente';
-                scoreDisplay.style.color = '#0d9488';
-                startStartCountdown();
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Erro ao carregar treino inteligente. Voltando ao modo normal.");
-                // Fallback
-                mode = 'normal';
-                initDeck();
-                startStartCountdown();
-            });
-
-    } else if (mode === 'homework') {
+    if (mode === 'homework') {
         initDeck();
         const scoreDisplay = document.getElementById('score-display');
         scoreDisplay.innerHTML = '📝 Dever de Casa';
