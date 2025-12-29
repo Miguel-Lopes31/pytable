@@ -70,3 +70,4 @@ class QuestionLog(db.Model):
     number_base = db.Column(db.Integer, nullable=False) # The table number (e.g., 7)
     number_mult = db.Column(db.Integer, nullable=False) # The multiplier (e.g., 8)
     is_correct = db.Column(db.Boolean, nullable=False)
+    operation_type = db.Column(db.String(20), default='multiply') # 'multiply' or 'divide'

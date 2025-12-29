@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, GameSession, QuestionLog, Classroom, StudentClassroom, Homework, HomeworkSubmission
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, or_, and_
 from datetime import datetime, timedelta
 import os
 
@@ -86,7 +86,7 @@ def login():
             session['user_id'] = user.id
             session['username'] = user.username
             session['is_admin'] = user.is_admin
-            return redirect(url_for('menu'))
+            return redirect(url_for('mode_select'))
         else:
             return render_template('auth.html', error="Invalid credentials", mode='login')
     
@@ -122,6 +122,18 @@ def register():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+@app.route('/select')
+@login_required
+def mode_select():
+    return render_template('mode_select.html', username=session.get('username'))
+
+@app.route('/set_mode/<mode>')
+@login_required
+def set_mode(mode):
+    if mode in ['multiply', 'divide']:
+        session['operation_mode'] = mode
+    return redirect(url_for('menu'))
 
 # Helper for Level System
 def get_level_data(total_score):
@@ -188,19 +200,24 @@ def menu():
     total_score = db.session.query(func.sum(GameSession.score)).filter_by(user_id=user.id).scalar() or 0
     level_data = get_level_data(total_score)
     
-    return render_template('menu.html', username=user.username, user=user, level_data=level_data)
+    # Get current operation mode (default to multiply if not set)
+    operation_mode = session.get('operation_mode', 'multiply')
+    
+    return render_template('menu.html', username=user.username, user=user, level_data=level_data, operation_mode=operation_mode)
 
 @app.route('/game')
 @login_required
 def game():
     # Helper to get info from query params, e.g. ?tables=2,3 or ?tables=all
     tables = request.args.get('tables', '1')
-    return render_template('game.html', tables=tables)
+    operation_mode = session.get('operation_mode', 'multiply')
+    return render_template('game.html', tables=tables, operation_mode=operation_mode)
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', username=session['username'])
+    operation_mode = session.get('operation_mode', 'multiply')
+    return render_template('dashboard.html', username=session['username'], operation_mode=operation_mode)
 
 @app.route('/ranking')
 @login_required
@@ -411,12 +428,15 @@ def submit_game():
     db.session.flush() # Get ID
     
     # Save details
+    operation = data.get('operation', 'multiply') # Get operation from payload
+    
     for q in data.get('details', []):
         log = QuestionLog(
             session_id=new_session.id,
             number_base=q['base'],
             number_mult=q['mult'],
-            is_correct=q['correct']
+            is_correct=q['correct'],
+            operation_type=operation
         )
         db.session.add(log)
     
@@ -433,11 +453,23 @@ def get_stats():
     
     # Use cast for PostgreSQL compatibility (SUM of boolean needs cast to int)
     from sqlalchemy import case
+    
+    # Get current operation mode (default to multiply if not set)
+    operation_mode = session.get('operation_mode', 'multiply')
+    
+    # Handle legacy data where operation_type might be NULL (treat as multiply)
+    op_filter = QuestionLog.operation_type == operation_mode
+    if operation_mode == 'multiply':
+        op_filter = or_(QuestionLog.operation_type == 'multiply', QuestionLog.operation_type == None)
+
     results = db.session.query(
         QuestionLog.number_base,
         func.sum(case((QuestionLog.is_correct == True, 1), else_=0)).label('correct'),
         func.count(QuestionLog.id).label('total')
-    ).join(GameSession).filter(GameSession.user_id == user_id).group_by(QuestionLog.number_base).all()
+    ).join(GameSession).filter(
+        GameSession.user_id == user_id,
+        op_filter
+    ).group_by(QuestionLog.number_base).all()
     
     stats = {}
     for r in results:
@@ -451,22 +483,68 @@ def get_stats():
         
     return jsonify(stats)
 
+@app.route('/api/heatmap')
+@login_required
+def get_heatmap():
+    user_id = session['user_id']
+    
+    # Get detailed stats for each specific multiplication (base x mult)
+    from sqlalchemy import case
+    
+    # Get current operation mode
+    operation_mode = session.get('operation_mode', 'multiply')
+    
+    # Handle legacy data
+    op_filter = QuestionLog.operation_type == operation_mode
+    if operation_mode == 'multiply':
+        op_filter = or_(QuestionLog.operation_type == 'multiply', QuestionLog.operation_type == None)
+
+    results = db.session.query(
+        QuestionLog.number_base,
+        QuestionLog.number_mult,
+        func.sum(case((QuestionLog.is_correct == True, 1), else_=0)).label('correct'),
+        func.count(QuestionLog.id).label('total')
+    ).join(GameSession).filter(
+        GameSession.user_id == user_id,
+        op_filter
+    ).group_by(QuestionLog.number_base, QuestionLog.number_mult).all()
+    
+    # Build a 10x10 matrix of accuracy rates
+    heatmap = {}
+    for r in results:
+        key = f"{r.number_base}x{r.number_mult}"
+        c = int(r.correct) if r.correct else 0
+        rate = round((c / r.total) * 100, 1) if r.total > 0 else None
+        heatmap[key] = {
+            'correct': c,
+            'total': r.total,
+            'rate': rate,
+            'errors': r.total - c
+        }
+    
+    return jsonify(heatmap)
+
+
 @app.route('/api/smart_deck')
 @login_required
 def get_smart_deck():
     user_id = session['user_id']
     
-    # Logic: Find "Active Errors".
+    # Logic: Find "Active Errors" for the current operation mode.
+    operation_mode = session.get('operation_mode', 'multiply')
+
     # An active error is a (base, mult) pair where the LATEST attempt was Incorrect.
     # If the latest attempt was Correct, it's considered "resolved" for now and removed from priority.
     
-    # 1. Subquery to find the latest QuestionLog ID for each (base, mult) pair for this user
+    # 1. Subquery to find the latest QuestionLog ID for each (base, mult) pair for this user AND mode
     latest_attempts_subquery = db.session.query(
         QuestionLog.number_base,
         QuestionLog.number_mult,
         func.max(QuestionLog.id).label('max_id')
     ).join(GameSession).filter(
-        GameSession.user_id == user_id
+        GameSession.user_id == user_id,
+        or_(QuestionLog.operation_type == operation_mode, 
+            and_(operation_mode == 'multiply', QuestionLog.operation_type == None)) # Handle legacy
     ).group_by(QuestionLog.number_base, QuestionLog.number_mult).subquery()
     
     # 2. Query the actual logs that match these max_ids AND are incorrect
@@ -559,6 +637,19 @@ def check_and_migrate():
                             conn.commit()
                     except Exception as e:
                         print(f"approved column may already exist or error: {e}")
+
+            # Check for operation_type in question_log
+            if 'question_log' in tables:
+                 ql_columns = [c['name'] for c in inspector.get_columns('question_log')]
+                 if 'operation_type' not in ql_columns:
+                     print("Migrating: Adding operation_type to QuestionLog...")
+                     try:
+                         with db.engine.connect() as conn:
+                             # Same command for both SQLite and Postgres in this case
+                             conn.execute(db.text("ALTER TABLE question_log ADD COLUMN operation_type VARCHAR(20) DEFAULT 'multiply'"))
+                             conn.commit()
+                     except Exception as e:
+                         print(f"operation_type column error: {e}")
     except Exception as e:
         print(f"Migration check failed: {e}")
         # Don't crash the app, let db.create_all handle table creation

@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tableConfig = dataEl.dataset.tables;
     const timeLimitStr = dataEl.dataset.time;
     const mode = dataEl.dataset.mode || 'normal';
+    const operationMode = dataEl.dataset.operationMode || 'multiply';
     const globalTimeLimit = parseInt(dataEl.dataset.globalTime) || 60;
 
     // Zombie Mode overrides
@@ -46,7 +47,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tables.forEach(base => {
             for (let i = 1; i <= 10; i++) {
-                deck.push({ base: base, mult: i, answer: base * i });
+                if (operationMode === 'divide') {
+                    // Division: (base * i) / base = i
+                    // Example: Table 5, i=3 -> 15 / 5 = 3
+                    deck.push({
+                        base: base,
+                        mult: i,
+                        answer: i,
+                        operation: 'divide'
+                    });
+                } else {
+                    // Multiplication: base * i = ?
+                    deck.push({
+                        base: base,
+                        mult: i,
+                        answer: base * i,
+                        operation: 'multiply'
+                    });
+                }
             }
         });
 
@@ -72,6 +90,11 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.globalTimeRemaining = globalTimeLimit;
         globalTimerText.textContent = formatTime(gameState.globalTimeRemaining);
 
+        // Start clock ticking sound
+        if (typeof soundManager !== 'undefined') {
+            soundManager.startClockTicking(() => gameState.globalTimeRemaining);
+        }
+
         gameState.globalTimerInterval = setInterval(() => {
             gameState.globalTimeRemaining--;
             globalTimerText.textContent = formatTime(gameState.globalTimeRemaining);
@@ -83,6 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (gameState.globalTimeRemaining <= 0) {
                 clearInterval(gameState.globalTimerInterval);
+                if (typeof soundManager !== 'undefined') {
+                    soundManager.stopClockTicking();
+                    soundManager.playAlarm();
+                }
                 endGame();
             }
         }, 1000);
@@ -101,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 deck = data;
                 scoreDisplay.innerHTML = '🧠 Treino Inteligente';
-                scoreDisplay.style.color = '#9b59b6';
+                scoreDisplay.style.color = '#0d9488';
                 startStartCountdown();
             })
             .catch(err => {
@@ -137,14 +164,33 @@ document.addEventListener('DOMContentLoaded', () => {
         let count = 5;
         countdownEl.textContent = count;
 
+        // Play initial countdown beep
+        if (typeof soundManager !== 'undefined') {
+            soundManager.init();
+            soundManager.playCountdown(false);
+        }
+
         const timer = setInterval(() => {
             count--;
             if (count > 0) {
                 countdownEl.textContent = count;
+                // Play countdown beep (final beep is different)
+                if (typeof soundManager !== 'undefined') {
+                    soundManager.playCountdown(count === 1);
+                }
             } else {
                 clearInterval(timer);
                 overlay.style.display = 'none';
                 gameState.active = true;
+
+                // Start mode-specific sounds
+                if (typeof soundManager !== 'undefined') {
+                    if (mode === 'zombie') {
+                        soundManager.startZombieAmbient();
+                    }
+                    // Normal and smart modes: no ambient music, just feedback sounds
+                }
+
                 startGlobalTimer();
                 nextQuestion();
             }
@@ -171,7 +217,14 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.currentQuestion = deck.pop();
 
         // Update UI
-        questionEl.textContent = `${gameState.currentQuestion.base} x ${gameState.currentQuestion.mult} = ?`;
+        if (operationMode === 'divide') {
+            // Display: (base * mult) ÷ base = ?
+            const dividend = gameState.currentQuestion.base * gameState.currentQuestion.mult;
+            questionEl.textContent = `${dividend} ÷ ${gameState.currentQuestion.base} = ?`;
+        } else {
+            questionEl.textContent = `${gameState.currentQuestion.base} × ${gameState.currentQuestion.mult} = ?`;
+        }
+
         questionEl.classList.remove('visible');
         void questionEl.offsetWidth; // trigger reflow
         questionEl.classList.add('visible');
@@ -224,7 +277,15 @@ document.addEventListener('DOMContentLoaded', () => {
             let offset = Math.floor(Math.random() * 10) - 5;
             if (offset === 0) offset = 1;
             let val = correctAnswer + offset;
-            if (val < 0) val = Math.abs(val);
+
+            // For division (answers 1-10), ensure 1-10 range mostly, but definitely > 0
+            if (operationMode === 'divide') {
+                if (val <= 0) val = 1 + Math.abs(val); // Ensure positive
+                // Try to keep within 1-20 reasonable range for division results
+                if (val > 20) val = 20;
+            } else {
+                if (val < 0) val = Math.abs(val);
+            }
             options.add(val);
         }
 
@@ -261,6 +322,11 @@ document.addEventListener('DOMContentLoaded', () => {
             gameState.score++;
             if (btnElement) btnElement.classList.add('correct-anim');
 
+            // Play correct sound
+            if (typeof soundManager !== 'undefined') {
+                soundManager.playCorrect();
+            }
+
             if (mode === 'time_attack') {
                 scoreEl.textContent = `⏱️ Score: ${gameState.score}`;
             } else if (mode === 'zombie') {
@@ -278,6 +344,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 questionEl.classList.add('shake');
             }
 
+            // Play incorrect sound
+            if (typeof soundManager !== 'undefined') {
+                soundManager.playIncorrect();
+            }
+
             // Zombie Mode: Instant Death
             if (mode === 'zombie') {
                 setTimeout(endGame, 1000);
@@ -293,6 +364,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear all timers
         if (gameState.timerInterval) clearInterval(gameState.timerInterval);
         if (gameState.globalTimerInterval) clearInterval(gameState.globalTimerInterval);
+
+        // Stop all sounds and play end sound
+        if (typeof soundManager !== 'undefined') {
+            soundManager.stopAll();
+
+            // Determine which end sound to play
+            const isVictory = mode === 'zombie' ? gameState.score === 100 : gameState.score > 0;
+            if (isVictory) {
+                soundManager.playVictory();
+            } else {
+                soundManager.playGameOver();
+            }
+        }
 
         overlay.style.display = 'flex';
 
@@ -328,23 +412,31 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    window.saveAndExit = function () {
-        fetch('/api/submit_game', {
+    function saveSession() {
+        if (gameState.score === 0 && gameState.totalQuestions === 0) return Promise.resolve();
+
+        return fetch('/api/submit_game', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                tables: tableConfig, // Will serve as record, even if mode overridden
-                mode: mode, // SEND MODE TO SERVER
-                homework_id: dataEl.dataset.homeworkId, // Send ID if exists
-                score: gameState.score,
-                total_questions: gameState.totalQuestions,
-                details: gameState.details
+                details: gameState.details,
+                mode: mode,
+                operation: operationMode,
+                homework_id: dataEl.dataset.homeworkId
             })
         }).then(res => res.json())
             .then(data => {
-                window.location.href = '/dashboard';
-            });
+                console.log('Session saved', data);
+            })
+            .catch(err => console.error('Error saving session:', err));
+    }
+
+    window.saveAndExit = function () {
+        const btn = document.querySelector('.auth-box .btn');
+        if (btn) btn.textContent = 'Salvando...';
+
+        saveSession().then(() => {
+            window.location.href = '/dashboard';
+        });
     };
 });

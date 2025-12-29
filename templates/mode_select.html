@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mode-select-container">
+    <div class="mode-header">
+        <h1>📚 Pytable</h1>
+        <p class="subtitle">Olá, <strong>{{ username }}</strong>! O que você quer praticar hoje?</p>
+    </div>
+
+    <div class="mode-cards">
+        <a href="{{ url_for('set_mode', mode='multiply') }}" class="mode-card multiply">
+            <div class="mode-icon">✖️</div>
+            <h2>Multiplicação</h2>
+            <p>Tabuada do 1 ao 10</p>
+            <div class="mode-examples">
+                <span>7 × 8 = ?</span>
+            </div>
+        </a>
+
+        <a href="{{ url_for('set_mode', mode='divide') }}" class="mode-card divide">
+            <div class="mode-icon">➗</div>
+            <h2>Divisão</h2>
+            <p>Tabuada do 1 ao 10</p>
+            <div class="mode-examples">
+                <span>56 ÷ 8 = ?</span>
+            </div>
+        </a>
+    </div>
+
+    <div class="mode-footer">
+        <p>📐 Pratique matemática de forma divertida! 🎯</p>
+    </div>
+</div>
+{% endblock %}

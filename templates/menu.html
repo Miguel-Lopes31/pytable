@@ -2,7 +2,26 @@
 
 {% block content %}
 <div class="page-header" style="margin-bottom: 30px;">
-    <h1>Bem-vindo, {{ username }} {% if user.zombie_badge %} 🧟 {% endif %}</h1>
+    <!-- Mode Banner -->
+    <div class="mode-banner {{ 'divide' if operation_mode == 'divide' else 'multiply' }}"
+        style="margin-bottom: 20px; text-align: center; padding: 20px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+        {% if operation_mode == 'divide' %}
+        <h1
+            style="font-size: 2.2rem; margin: 0; display: flex; align-items: center; justify-content: center; gap: 15px;">
+            <span style="font-size: 3rem;">➗</span> Tabuada de Divisão
+        </h1>
+        <p style="color: var(--text-muted); margin-top: 5px;">Selecione os divisores para praticar</p>
+        {% else %}
+        <h1
+            style="font-size: 2.2rem; margin: 0; display: flex; align-items: center; justify-content: center; gap: 15px;">
+            <span style="font-size: 3rem;">✖️</span> Tabuada de Multiplicação
+        </h1>
+        <p style="color: var(--text-muted); margin-top: 5px;">Selecione os multiplicadores para praticar</p>
+        {% endif %}
+        <a href="{{ url_for('mode_select') }}" class="btn"
+            style="background: transparent; border: 1px solid var(--text-muted); padding: 5px 15px; font-size: 0.8rem; margin-top: 15px; display: inline-block; width: auto;">Trocar
+            Modo</a>
+    </div>
 
     <!-- Minimal Level Display -->
     <div
@@ -19,8 +38,6 @@
             Próximo: {{ level_data.next_level_score }} XP
         </div>
     </div>
-
-    <p style="color: var(--text-muted)">Escolha as tabuadas que deseja praticar hoje.</p>
 </div>
 
 <div class="action-bar"
@@ -57,7 +74,7 @@
         Zumbi 🧟</button>
     <button class="btn btn-large" style="background-color: #ffaa00; margin-left: 10px;"
         onclick="startTimeAttackMode()">Relógio ⏱️</button>
-    <button class="btn btn-large" style="background-color: #9b59b6; margin-left: 10px;"
+    <button class="btn btn-large" style="background-color: #0d9488; margin-left: 10px;"
         onclick="startSmartMode()">Treino 🧠</button>
 </div>
 

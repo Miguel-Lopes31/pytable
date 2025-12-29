@@ -5,7 +5,7 @@
 <!-- We pass 'tables' and 'time' from query params to the dataset -->
 <div id="game-data" data-tables="{{ tables|default('1') }}" data-time="{{ request.args.get('time', 10) }}"
     data-mode="{{ request.args.get('mode', 'normal') }}" data-homework-id="{{ request.args.get('homework_id', '') }}"
-    data-global-time="{{ request.args.get('global_time', 60) }}">
+    data-global-time="{{ request.args.get('global_time', 60) }}" data-operation-mode="{{ operation_mode }}">
 </div>
 
 <div class="overlay" id="overlay">
