@@ -431,9 +431,11 @@ def get_stats():
     # Aggregate stats per number (1-10)
     # We want: { "1": { correct: 10, total: 12 }, "2": ... }
     
+    # Use cast for PostgreSQL compatibility (SUM of boolean needs cast to int)
+    from sqlalchemy import case
     results = db.session.query(
         QuestionLog.number_base,
-        func.sum(QuestionLog.is_correct).label('correct'),
+        func.sum(case((QuestionLog.is_correct == True, 1), else_=0)).label('correct'),
         func.count(QuestionLog.id).label('total')
     ).join(GameSession).filter(GameSession.user_id == user_id).group_by(QuestionLog.number_base).all()
     
@@ -447,8 +449,6 @@ def get_stats():
             'rate': round((c / r.total) * 100, 1) if r.total > 0 else 0
         }
         
-    return jsonify(stats)
-
     return jsonify(stats)
 
 @app.route('/api/smart_deck')
@@ -513,8 +513,6 @@ def get_smart_deck():
     for card in deck_data:
         card['answer'] = card['base'] * card['mult']
         
-    return jsonify(deck_data)
-    
     return jsonify(deck_data)
 
 # --- Teacher Mode Implementation ---
